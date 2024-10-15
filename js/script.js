@@ -1,5 +1,11 @@
 const global = {
   currentPage: window.location.pathname,
+  search: {
+    term: "",
+    type: "",
+    page: 1,
+    totalPages: 1,
+  },
 };
 
 async function displayPopularMovies() {
@@ -44,6 +50,7 @@ async function displayPopularMovies() {
 
 async function displayPopularShows() {
   const { results } = await fetchAPIData("tv/popular");
+  // console.log(results);
   results.forEach((show) => {
     const div = document.createElement("div");
     div.classList.add("card");
@@ -264,7 +271,24 @@ function displayBackgroundImage(type, backgroundPath) {
   }
 }
 
-// Display Slider
+// search movies and shows
+
+async function search() {
+  const queryString = window.location.search;
+  console.log(queryString);
+  const urlParams = new URLSearchParams(queryString);
+  // console.log(urlParams);
+
+  global.search.type = urlParams.get("type");
+  global.search.term = urlParams.get("search-term");
+
+  if ((global.search.term !== "") & (global.search.term !== null)) {
+  } else {
+    showAlert("please enter search term");
+  }
+}
+
+// Display Slider for movies
 
 async function displaySlider() {
   const { results } = await fetchAPIData("movie/now_playing");
@@ -291,6 +315,34 @@ async function displaySlider() {
     initSwiper();
   });
 
+  // console.log(results);
+}
+
+async function displayTVSwiper() {
+  const { results } = await fetchAPIData("tv/top_rated");
+
+  results.forEach((show) => {
+    const div = document.createElement("div");
+
+    div.classList.add("swiper-slide");
+
+    div.innerHTML = `
+    <a href="tv-details.html?id=${show.id}">
+    
+      <img src='https://image.tmdb.org/t/p/w500${show.poster_path}' alt=${
+      show.title
+    }" />
+    </a>
+    <h4 class="swiper-rating">
+      <i class="fas fa-star text-secondary"></i> ${show.vote_average.toFixed(
+        1
+      )} / 10
+    </h4>
+  `;
+    document.querySelector(".swiper-wrapper").appendChild(div);
+
+    initSwiper();
+  });
   // console.log(results);
 }
 
@@ -360,6 +412,17 @@ function highLightActiveLink() {
   });
 }
 
+// show  alert
+
+function showAlert(message, className) {
+  const alertEl = document.createElement("div");
+  alertEl.classList.add("alert", className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector("#alert").appendChild(alertEl);
+
+  setTimeout(() => alertEl.remove(), 3000);
+}
+
 function addCommasToNumber(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -372,6 +435,7 @@ function init() {
       displayPopularMovies();
       break;
     case "/shows.html":
+      displayTVSwiper();
       displayPopularShows();
       break;
     case "/movie-details.html":
@@ -380,7 +444,7 @@ function init() {
     case "/tv-details.html":
       displayShowDetails();
     case "/search.html":
-      console.log("search");
+      search();
   }
 
   highLightActiveLink();
